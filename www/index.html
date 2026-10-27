@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#0e1621">
+  <title>QuimNova</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main>
+    <header>
+      <h1>QuimNova</h1>
+      <span id="formula" aria-live="polite"></span>
+    </header>
+
+    <section id="escena">
+      <canvas id="lienzo" aria-label="Molécula en 3D: arrastra para girar, pellizca para acercar"></canvas>
+      <p id="aviso" hidden></p>
+    </section>
+
+    <section id="panel">
+      <nav id="chips" aria-label="Moléculas"></nav>
+      <h2 id="nombre"></h2>
+      <p id="geo"></p>
+      <p id="desc"></p>
+      <div id="controles">
+        <button type="button" id="b-giro" aria-pressed="true">Giro automático</button>
+        <button type="button" id="b-vib" aria-pressed="false">Vibración</button>
+        <button type="button" id="b-esp" aria-pressed="false">Espacio lleno</button>
+        <button type="button" id="b-reset">Reiniciar vista</button>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

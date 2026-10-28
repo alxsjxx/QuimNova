@@ -1,177 +1,220 @@
-// Visor 3D ligero: geometrías y materiales compartidos, render solo cuando hace falta.
-import * as THREE from '../vendor/three.module.min.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+import { moleculesData } from './molecules.js';
 
-// bs = radio en bolas y barras; vdw = radio de van der Waals (espacio lleno), en Å.
-const ELEM = {
-  H: { color: 0xf2f2f2, bs: 0.30, vdw: 1.10 },
-  C: { color: 0x6b7280, bs: 0.42, vdw: 1.70 },
-  N: { color: 0x3a5bff, bs: 0.40, vdw: 1.55 },
-  O: { color: 0xe8261c, bs: 0.40, vdw: 1.52 },
-};
-const Y = new THREE.Vector3(0, 1, 0);
-const X = new THREE.Vector3(1, 0, 0);
-const RADIO_ENLACE = { 1: 0.1, 2: 0.07, 3: 0.055 };
-const SEPARACION = 0.2;
+export class MoleculeViewer {
+    constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.PerspectiveCamera(60, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+        this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        
+        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.container.appendChild(this.renderer.domElement);
 
-export function createViewer(canvas) {
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'low-power' });
-  renderer.setClearColor(0x0e1621, 1);
+        this.camera.position.z = 5;
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-  scene.add(new THREE.AmbientLight(0xffffff, 1.1));
-  const sol = new THREE.DirectionalLight(0xffffff, 2.2);
-  sol.position.set(3, 4, 5);
-  scene.add(sol);
+        // Luces optimizadas para móviles
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        this.scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 5, 5);
+        this.scene.add(dirLight);
 
-  const mol = new THREE.Group();
-  scene.add(mol);
+        this.currentMoleculeKey = 'H2O';
+        this.mode = 'viewer'; // 'viewer' o 'puzzle'
+        this.atomMeshes = [];
+        this.bondMeshes = [];
+        this.selectedAtom = null;
+        this.userConnections = [];
+        this.history = [];
 
-  const geoEsfera = new THREE.SphereGeometry(1, 20, 14);
-  const geoCilindro = new THREE.CylinderGeometry(1, 1, 1, 10, 1, true);
-  const mats = {};
-  for (const [el, d] of Object.entries(ELEM)) mats[el] = new THREE.MeshLambertMaterial({ color: d.color });
-  const matEnlace = new THREE.MeshLambertMaterial({ color: 0xb8c0cc });
-
-  const st = {
-    estilo: 'bolas', giro: true, vibra: false, zoom: 1,
-    base: [], pos: [], dirs: [], elementos: [], atomos: [], enlaces: [], R: 2, dist: 6,
-  };
-  let raf = 0, ultimo = 0, tiempo = 0;
-
-  // Vectores de trabajo reutilizados (evitan basura en cada fotograma)
-  const v1 = new THREE.Vector3(), v2 = new THREE.Vector3(), unit = new THREE.Vector3(), perp = new THREE.Vector3();
-  const qA = new THREE.Quaternion(), qB = new THREE.Quaternion();
-
-  function radio(el) { return st.estilo === 'bolas' ? ELEM[el].bs : ELEM[el].vdw; }
-
-  function colocar(pos) {
-    st.atomos.forEach((m, i) => { m.position.copy(pos[i]); m.scale.setScalar(radio(st.elementos[i])); });
-    for (const b of st.enlaces) {
-      v1.copy(pos[b.i]); v2.copy(pos[b.j]);
-      unit.subVectors(v2, v1);
-      const largo = unit.length();
-      if (largo < 1e-6) continue;
-      unit.divideScalar(largo);
-      perp.crossVectors(unit, Math.abs(unit.z) < 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, 1, 0)).normalize();
-      qA.setFromUnitVectors(Y, unit);
-      const n = b.meshes.length;
-      b.meshes.forEach((m, k) => {
-        const desplaz = (k - (n - 1) / 2) * SEPARACION;
-        m.position.copy(v1).add(v2).multiplyScalar(0.5).addScaledVector(perp, desplaz);
-        m.quaternion.copy(qA);
-        const r = RADIO_ENLACE[n] ?? 0.06;
-        m.scale.set(r, largo, r);
-        m.visible = st.estilo === 'bolas';
-      });
+        this.initEvents();
+        this.loadMolecule(this.currentMoleculeKey);
+        this.animate();
     }
-  }
 
-  function ajustar() {
-    let R = 0;
-    st.base.forEach((p, i) => { R = Math.max(R, p.length() + radio(st.elementos[i])); });
-    st.R = R;
-    const medio = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-    st.dist = (R * 1.15) / (medio * Math.min(1, camera.aspect));
-    camera.position.set(0, 0, st.dist * st.zoom);
-    camera.lookAt(0, 0, 0);
-  }
+    loadMolecule(key) {
+        this.currentMoleculeKey = key;
+        this.molData = JSON.parse(JSON.stringify(moleculesData[key]));
+        this.clearScene();
+        this.userConnections = [];
+        this.history = [];
 
-  function tick(ahora) {
-    raf = 0;
-    const dt = Math.min((ahora - ultimo) / 1000, 0.1);
-    ultimo = ahora;
-    tiempo += dt;
-    if (st.giro) mol.quaternion.premultiply(qB.setFromAxisAngle(Y, dt * 0.6));
-    if (st.vibra) {
-      const amp = 0.1 * Math.sin(tiempo * 2 * Math.PI * 1.2);
-      st.base.forEach((p, i) => st.pos[i].copy(p).addScaledVector(st.dirs[i], amp));
-      colocar(st.pos);
+        if (this.mode === 'puzzle') {
+            // Desordenar átomos ligeramente para el puzzle
+            this.molData.atoms.forEach(atom => {
+                atom.x += (Math.random() - 0.5) * 2;
+                atom.y += (Math.random() - 0.5) * 2;
+                atom.z += (Math.random() - 0.5) * 2;
+            });
+        }
+
+        this.buildScene();
+        if (typeof window.onMoleculeLoaded === 'function') {
+            window.onMoleculeLoaded(this.molData);
+        }
     }
-    renderer.render(scene, camera);
-    if (st.giro || st.vibra) programar(false);
-  }
 
-  function programar(reiniciarReloj) {
-    if (raf || document.hidden) return;
-    if (reiniciarReloj) ultimo = performance.now();
-    raf = requestAnimationFrame(tick);
-  }
-  const pedirRender = () => programar(true);
-
-  function setMolecule(m) {
-    for (const o of [...mol.children]) mol.remove(o);
-    const c = new THREE.Vector3();
-    m.atomos.forEach(([, x, y, z]) => c.add(v1.set(x, y, z)));
-    c.divideScalar(m.atomos.length);
-
-    st.elementos = m.atomos.map((a) => a[0]);
-    st.base = m.atomos.map(([, x, y, z]) => new THREE.Vector3(x, y, z).sub(c));
-    st.pos = st.base.map((p) => p.clone());
-    st.dirs = st.base.map((p) => (p.lengthSq() > 1e-8 ? p.clone().normalize() : new THREE.Vector3()));
-    st.atomos = st.elementos.map((el) => { const x = new THREE.Mesh(geoEsfera, mats[el]); mol.add(x); return x; });
-    st.enlaces = m.enlaces.map(([i, j, orden]) => {
-      const meshes = [];
-      for (let k = 0; k < orden; k++) { const x = new THREE.Mesh(geoCilindro, matEnlace); mol.add(x); meshes.push(x); }
-      return { i, j, meshes };
-    });
-
-    mol.quaternion.setFromAxisAngle(X, 0.35);
-    ajustar();
-    colocar(st.base);
-    pedirRender();
-  }
-
-  function setStyle(estilo) { st.estilo = estilo; ajustar(); colocar(st.vibra ? st.pos : st.base); pedirRender(); }
-  function setRotate(b) { st.giro = b; pedirRender(); }
-  function setVibrate(b) { st.vibra = b; if (!b) colocar(st.base); pedirRender(); }
-  function resetView() { st.zoom = 1; mol.quaternion.setFromAxisAngle(X, 0.35); ajustar(); pedirRender(); }
-
-  // --- Gestos: un dedo gira, dos dedos hacen zoom (la rueda sirve para probar en PC) ---
-  const punteros = new Map();
-  let pinza0 = 0, zoom0 = 1;
-  const distPinza = () => { const [a, b] = [...punteros.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
-  const fijarZoom = (z) => { st.zoom = THREE.MathUtils.clamp(z, 0.4, 2.5); camera.position.z = st.dist * st.zoom; };
-
-  canvas.addEventListener('pointerdown', (e) => {
-    canvas.setPointerCapture(e.pointerId);
-    punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (punteros.size === 2) { pinza0 = distPinza(); zoom0 = st.zoom; }
-  });
-  canvas.addEventListener('pointermove', (e) => {
-    const p = punteros.get(e.pointerId);
-    if (!p) return;
-    const dx = e.clientX - p.x, dy = e.clientY - p.y;
-    p.x = e.clientX; p.y = e.clientY;
-    if (punteros.size === 1) {
-      mol.quaternion.premultiply(qA.setFromAxisAngle(Y, dx * 0.01)).premultiply(qB.setFromAxisAngle(X, dy * 0.01));
-    } else if (punteros.size === 2 && pinza0 > 0) {
-      fijarZoom((zoom0 * pinza0) / distPinza());
+    clearScene() {
+        this.atomMeshes.forEach(m => this.scene.remove(m));
+        this.bondMeshes.forEach(m => this.scene.remove(m));
+        this.atomMeshes = [];
+        this.bondMeshes = [];
+        this.selectedAtom = null;
     }
-    pedirRender();
-  });
-  const soltar = (e) => punteros.delete(e.pointerId);
-  canvas.addEventListener('pointerup', soltar);
-  canvas.addEventListener('pointercancel', soltar);
-  canvas.addEventListener('wheel', (e) => { e.preventDefault(); fijarZoom(st.zoom * (1 + Math.sign(e.deltaY) * 0.08)); pedirRender(); }, { passive: false });
 
-  // --- Tamaño, visibilidad y pérdida de contexto WebGL ---
-  new ResizeObserver(() => {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    if (!w || !h) return;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(w, h, false);
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-    if (st.base.length) ajustar();
-    pedirRender();
-  }).observe(canvas);
+    buildScene() {
+        const sphereGeo = new THREE.SphereGeometry(1, 16, 16);
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else pedirRender();
-  });
-  canvas.addEventListener('webglcontextlost', (e) => e.preventDefault());
-  canvas.addEventListener('webglcontextrestored', pedirRender);
+        this.molData.atoms.forEach((atom, index) => {
+            const mat = new THREE.MeshStandardMaterial({ color: atom.color, roughness.val: 0.3 });
+            const mesh = new THREE.Mesh(sphereGeo, mat);
+            mesh.scale.set(atom.radius, atom.radius, atom.radius);
+            mesh.position.set(atom.x, atom.y, atom.z);
+            mesh.userData = { id: atom.id, element: atom.element, index: index };
+            this.scene.add(mesh);
+            this.atomMeshes.push(mesh);
+        });
 
-  return { setMolecule, setStyle, setRotate, setVibrate, resetView };
+        if (this.mode === 'viewer') {
+            this.molData.connections.forEach(conn => {
+                this.createBondMesh(conn.from, conn.to, conn.type);
+            });
+        }
+    }
+
+    createBondMesh(fromId, toId, type) {
+        const atomA = this.molData.atoms.find(a => a.id === fromId);
+        const atomB = this.molData.atoms.find(a => a.id === toId);
+        if (!atomA || !atomB) return;
+
+        const posA = new THREE.Vector3(atomA.x, atomA.y, atomA.z);
+        const posB = new THREE.Vector3(atomB.x, atomB.y, atomB.z);
+        const distance = posA.distanceTo(posB);
+
+        const cylGeo = new THREE.CylinderGeometry(type === 'double' ? 0.08 : 0.12, type === 'double' ? 0.08 : 0.12, distance, 8);
+        const mat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
+        const cylinder = new THREE.Mesh(cylGeo, mat);
+
+        cylinder.position.copy(posA).add(posB).multiplyScalar(0.5);
+        cylinder.lookAt(posB);
+        cylinder.rotateX(Math.PI / 2);
+
+        this.scene.add(cylinder);
+        this.bondMeshes.push(cylinder);
+    }
+
+    setMode(mode) {
+        this.mode = mode;
+        this.loadMolecule(this.currentMoleculeKey);
+    }
+
+    initEvents() {
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        this.container.addEventListener('click', (event) => {
+            const rect = this.container.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / this.container.clientWidth) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / this.container.clientHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, this.camera);
+            const intersects = raycaster.intersectObjects(this.atomMeshes);
+
+            if (intersects.length > 0) {
+                const clickedMesh = intersects[0].object;
+                const atomId = clickedMesh.userData.id;
+
+                if (this.mode === 'viewer') {
+                    if (typeof window.onAtomSelected === 'function') {
+                        window.onAtomSelected(this.molData.atoms.find(a => a.id === atomId));
+                    }
+                } else if (this.mode === 'puzzle') {
+                    this.handlePuzzleClick(atomId);
+                }
+            }
+        });
+    }
+
+    handlePuzzleClick(atomId) {
+        if (this.selectedAtom === null) {
+            this.selectedAtom = atomId;
+            this.highlightAtom(atomId, true);
+        } else if (this.selectedAtom === atomId) {
+            this.highlightAtom(atomId, false);
+            this.selectedAtom = null;
+        } else {
+            // Conectar átomos
+            this.history.push([...this.userConnections]);
+            this.userConnections.push({ from: this.selectedAtom, to: atomId, type: 'single' });
+            this.createBondMesh(this.selectedAtom, atomId, 'single');
+            this.highlightAtom(this.selectedAtom, false);
+            this.selectedAtom = null;
+            
+            if (typeof window.onPuzzleProgress === 'function') {
+                window.onPuzzleProgress(this.userConnections.length, this.molData.connections.length);
+            }
+        }
+    }
+
+    highlightAtom(atomId, highlight) {
+        const mesh = this.atomMeshes.find(m => m.userData.id === atomId);
+        if (mesh) {
+            mesh.material.emissive.setHex(highlight ? 0x00ff00 : 0x000000);
+        }
+    }
+
+    validatePuzzle() {
+        const required = this.molData.connections;
+        if (this.userConnections.length < required.length) {
+            return { success: false, message: 'Faltan conexiones por realizar en la molécula.' };
+        }
+
+        // Validación básica de enlaces correctos
+        for (let req of required) {
+            const exists = this.userConnections.some(uc => 
+                (uc.from === req.from && uc.to === req.to) || (uc.from === req.to && uc.to === req.from)
+            );
+            if (!exists) {
+                return { 
+                    success: false, 
+                    message: `Error de geometría o enlace: El átomo ${req.from} y el átomo ${req.to} requieren un enlace correcto según la valencia.` 
+                };
+            }
+        }
+
+        return { success: true, message: '¡Excelente! Puzzle completado correctamente con la geometría y valencias adecuadas.' };
+    }
+
+    undo() {
+        if (this.history.length > 0) {
+            this.userConnections = this.history.pop();
+            // Recargar escena para limpiar enlaces sobrantes
+            this.clearScene();
+            this.buildScene();
+            // Redibujar conexiones actuales
+            this.userConnections.forEach(uc => this.createBondMesh(uc.from, uc.to, uc.type));
+        }
+    }
+
+    resetPuzzle() {
+        this.loadMolecule(this.currentMoleculeKey);
+    }
+
+    getHint() {
+        const missing = this.molData.connections.find(rc => 
+            !this.userConnections.some(uc => (uc.from === rc.from && uc.to === rc.to) || (uc.from === rc.to && uc.to === rc.from))
+        );
+        if (missing) {
+            return `Pista: Intenta conectar el átomo con ID ${missing.from} con el átomo con ID ${missing.to}.`;
+        }
+        return '¡Todas las conexiones principales están listas!';
+    }
+
+    animate() {
+        requestAnimationFrame(() => this.animate());
+        this.scene.rotation.y += 0.005;
+        this.renderer.render(this.scene, this.camera);
+    }
 }

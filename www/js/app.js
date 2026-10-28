@@ -1,64 +1,94 @@
-import { MOLECULAS } from './molecules.js';
+import { MoleculeViewer } from './viewer.js';
 
-const $ = (s) => document.querySelector(s);
+document.addEventListener('DOMContentLoaded', () => {
+    const viewer = new MoleculeViewer('canvas-container');
 
-function aviso(texto) {
-  const a = $('#aviso');
-  a.textContent = texto;
-  a.hidden = false;
-}
+    const btnView = document.getElementById('btn-mode-view');
+    const btnPuzzle = document.getElementById('btn-mode-puzzle');
+    const puzzleControls = document.getElementById('puzzle-controls');
+    const infoCard = document.getElementById('info-card');
+    const toast = document.getElementById('toast-msg');
+    const winModal = document.getElementById('win-modal');
 
-async function iniciar() {
-  let viewer;
-  try {
-    const { createViewer } = await import('./viewer.js');
-    viewer = createViewer($('#lienzo'));
-  } catch (err) {
-    console.error(err);
-    aviso('No se pudo iniciar el visor 3D. Falta www/vendor (ejecuta el flujo de compilación) o tu dispositivo no soporta WebGL.');
-    return;
-  }
+    // Cambiar de modo
+    btnView.addEventListener('click', () => {
+        btnView.classList.add('active');
+        btnPuzzle.classList.remove('active');
+        puzzleControls.classList.remove('visible');
+        infoCard.style.display = 'block';
+        viewer.setMode('viewer');
+    });
 
-  const chips = $('#chips');
-  const botones = new Map();
+    btnPuzzle.addEventListener('click', () => {
+        btnPuzzle.classList.add('active');
+        btnView.classList.remove('active');
+        puzzleControls.classList.add('visible');
+        infoCard.style.display = 'none';
+        viewer.setMode('puzzle');
+        showToast('Toca 2 átomos para unirlos');
+    });
 
-  function mostrar(m) {
-    $('#formula').textContent = m.formula;
-    $('#nombre').textContent = m.nombre;
-    $('#geo').textContent = m.geometria;
-    $('#desc').textContent = m.descripcion;
-    botones.forEach((b, id) => b.setAttribute('aria-pressed', String(id === m.id)));
-    viewer.setMolecule(m);
-  }
+    // Cambio de moléculas
+    document.querySelectorAll('.mol-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            document.querySelectorAll('.mol-btn').forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            const key = e.target.getAttribute('data-mol');
+            viewer.loadMolecule(key);
+        });
+    });
 
-  for (const m of MOLECULAS) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'chip';
-    b.textContent = m.formula;
-    b.setAttribute('aria-label', m.nombre);
-    b.addEventListener('click', () => mostrar(m));
-    chips.append(b);
-    botones.set(m.id, b);
-  }
+    // Controles de puzzle
+    document.getElementById('btn-bond-type').addEventListener('click', (e) => {
+        const type = viewer.toggleBondType();
+        e.target.textContent = `Tipo: ${type === 'single' ? 'Simple' : 'Doble'}`;
+    });
 
-  const alternar = (btn, fn) => btn.addEventListener('click', () => {
-    const on = btn.getAttribute('aria-pressed') !== 'true';
-    btn.setAttribute('aria-pressed', String(on));
-    fn(on);
-  });
-  alternar($('#b-giro'), (on) => viewer.setRotate(on));
-  alternar($('#b-vib'), (on) => viewer.setVibrate(on));
-  alternar($('#b-esp'), (on) => viewer.setStyle(on ? 'espacio' : 'bolas'));
-  $('#b-reset').addEventListener('click', () => viewer.resetView());
+    document.getElementById('btn-undo').addEventListener('click', () => viewer.undo());
+    document.getElementById('btn-reset').addEventListener('click', () => viewer.resetPuzzle());
+    document.getElementById('btn-hint').addEventListener('click', () => {
+        showToast(viewer.getHint());
+    });
 
-  mostrar(MOLECULAS[0]);
-}
+    document.getElementById('btn-validate').addEventListener('click', () => {
+        const res = viewer.validatePuzzle();
+        showToast(res.message);
+        if (res.success) {
+            winModal.style.display = 'flex';
+        }
+    });
 
-iniciar();
+    document.getElementById('btn-next-mol').addEventListener('click', () => {
+        winModal.style.display = 'none';
+    });
 
-// Offline en navegador/PWA. Dentro de la APK los archivos ya van empaquetados.
-const nativo = window.Capacitor?.isNativePlatform?.();
-if (!nativo && 'serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js').catch(() => {});
-}
+    // Callbacks globales
+    window.onMoleculeLoaded = (mol) => {
+        document.getElementById('mol-name').textContent = mol.name;
+        document.getElementById('mol-formula').textContent = mol.formula;
+        document.getElementById('mol-mass').textContent = mol.mass;
+        document.getElementById('mol-geo').textContent = mol.geometry;
+        document.getElementById('mol-angles').textContent = mol.angles;
+        document.getElementById('mol-bonds').textContent = mol.bonds;
+        document.getElementById('mol-props').innerHTML = `<strong>Propiedades:</strong> ${mol.properties}`;
+        document.getElementById('mol-uses').innerHTML = `<strong>Usos:</strong> ${mol.uses}`;
+
+        window.onPuzzleProgress(0, mol.connections.length);
+    };
+
+    window.onAtomSelected = (atom) => {
+        showToast(`Átomo de ${atom.element} (Valencia: ${atom.valence})`);
+    };
+
+    window.onPuzzleProgress = (current, total) => {
+        document.getElementById('progress-text').textContent = `${current} / ${total}`;
+    };
+
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3500);
+    }
+});

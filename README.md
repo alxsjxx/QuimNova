@@ -1,29 +1,13 @@
-# QuimNova
+# QuimNova 🧪✨
 
-Visor educativo de moléculas 3D. HTML + CSS + JS + Three.js, empaquetado como APK con Capacitor.
-Todo funciona sin conexión: no hay CDN ni descargas en tiempo de ejecución.
+Aplicación educativa de química interactiva con representación 3D de moléculas, información detallada, inspección de átomos y un modo Puzzle interactivo para reconstrucción de moléculas con validación de valencias y geometría.
 
-## Estructura
+## Funcionalidades
+1. **Visualizador 3D**: Selección de moléculas (H₂O, CO₂, CH₄, NH₃, C₂H₄, C₆H₆), rotación, inspección táctil de átomos e información química detallada (fórmula, geometría, masa, enlaces, usos, etc.).
+2. **Modo Puzzle**: Desensamble de moléculas y reconstrucción mediante interacción táctil.
+3. **Validación Química**: Verificación de valencias, tipos de enlaces (simples/dobles) y sugerencias de corrección.
+4. **Herramientas de Puzzle**: Controles de Deshacer, Reiniciar, Pistas inteligentes, Contador de progreso y Animación al completar.
+5. **Optimizado para Móviles Modestos**: Renderizado Three.js eficiente y soporte offline mediante Service Worker.
 
-- `www/` — la app (lo único que editas día a día).
-- `capacitor.config.json` — nombre e ID de la app.
-- `scripts/copy-vendor.mjs` — copia Three.js a `www/vendor/` (lo hace el flujo, no tú).
-- `ci.yml` — flujo de GitHub Actions (va en `.github/workflows/ci.yml`).
-- El proyecto Android **no se guarda en el repo**: se genera en cada compilación.
-
-## Flujo diario desde el celular
-
-1. Edita archivos en GitHub (editor web) y haz *Commit*.
-2. Se publica la vista previa en `https://TU-USUARIO.github.io/quimnova/` (≈1 min). Ábrela en Chrome.
-3. Cuando quieras APK: **Actions → QuimNova → Run workflow → target = apk**.
-4. A los ≈6–10 min aparece en **Releases** un archivo `QuimNova.apk`: tócalo para descargarlo e instalarlo.
-
-## Añadir una molécula
-
-En `www/js/molecules.js`, copia un bloque de `MOLECULAS` y cambia átomos `[elemento, x, y, z]` (Å) y
-enlaces `[i, j, orden]`. Elementos soportados: H, C, N, O (para más, añade una línea en `ELEM` de `viewer.js`).
-
-## Notas
-
-- La APK es de **depuración** (se instala sin problema, no sirve para Play Store). Para publicar hay que firmar una *release*.
-- Si cambias archivos de `www/`, sube el número de `CACHE` en `www/sw.js` para que el navegador refresque la caché.
+## Compilado mediante GitHub Actions
+Subir `quimnova.zip` a la raíz del repositorio o hacer push de la carpeta `www`. Ejecutar el workflow `QuimNova` eligiendo el target `apk`.

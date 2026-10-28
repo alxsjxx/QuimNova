@@ -1,5 +1,6 @@
 {
   "appId": "com.quimnova.app",
   "appName": "QuimNova",
-  "webDir": "www"
+  "webDir": "www",
+  "bundledWebRuntime": false
 }

@@ -14,15 +14,15 @@ export class MoleculeViewer {
 
         this.camera.position.z = 5;
 
-        // Luces optimizadas para móviles
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         this.scene.add(ambientLight);
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
         dirLight.position.set(5, 5, 5);
         this.scene.add(dirLight);
 
         this.currentMoleculeKey = 'H2O';
-        this.mode = 'viewer'; // 'viewer' o 'puzzle'
+        this.mode = 'viewer'; 
+        this.selectedBondType = 'single';
         this.atomMeshes = [];
         this.bondMeshes = [];
         this.selectedAtom = null;
@@ -32,6 +32,14 @@ export class MoleculeViewer {
         this.initEvents();
         this.loadMolecule(this.currentMoleculeKey);
         this.animate();
+
+        window.addEventListener('resize', () => this.onWindowResize());
+    }
+
+    onWindowResize() {
+        this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
     }
 
     loadMolecule(key) {
@@ -42,11 +50,10 @@ export class MoleculeViewer {
         this.history = [];
 
         if (this.mode === 'puzzle') {
-            // Desordenar átomos ligeramente para el puzzle
             this.molData.atoms.forEach(atom => {
-                atom.x += (Math.random() - 0.5) * 2;
-                atom.y += (Math.random() - 0.5) * 2;
-                atom.z += (Math.random() - 0.5) * 2;
+                atom.x += (Math.random() - 0.5) * 2.5;
+                atom.y += (Math.random() - 0.5) * 2.5;
+                atom.z += (Math.random() - 0.5) * 1.5;
             });
         }
 
@@ -68,11 +75,11 @@ export class MoleculeViewer {
         const sphereGeo = new THREE.SphereGeometry(1, 16, 16);
 
         this.molData.atoms.forEach((atom, index) => {
-            const mat = new THREE.MeshStandardMaterial({ color: atom.color, roughness.val: 0.3 });
+            const mat = new THREE.MeshStandardMaterial({ color: atom.color, roughness: 0.3 });
             const mesh = new THREE.Mesh(sphereGeo, mat);
             mesh.scale.set(atom.radius, atom.radius, atom.radius);
             mesh.position.set(atom.x, atom.y, atom.z);
-            mesh.userData = { id: atom.id, element: atom.element, index: index };
+            mesh.userData = { id: atom.id, element: atom.element, index: index, valence: atom.valence };
             this.scene.add(mesh);
             this.atomMeshes.push(mesh);
         });
@@ -93,21 +100,39 @@ export class MoleculeViewer {
         const posB = new THREE.Vector3(atomB.x, atomB.y, atomB.z);
         const distance = posA.distanceTo(posB);
 
-        const cylGeo = new THREE.CylinderGeometry(type === 'double' ? 0.08 : 0.12, type === 'double' ? 0.08 : 0.12, distance, 8);
-        const mat = new THREE.MeshStandardMaterial({ color: 0xcccccc });
-        const cylinder = new THREE.Mesh(cylGeo, mat);
-
-        cylinder.position.copy(posA).add(posB).multiplyScalar(0.5);
-        cylinder.lookAt(posB);
-        cylinder.rotateX(Math.PI / 2);
-
-        this.scene.add(cylinder);
-        this.bondMeshes.push(cylinder);
+        if (type === 'double') {
+            const offset = 0.08;
+            [-offset, offset].forEach(dx => {
+                const cylGeo = new THREE.CylinderGeometry(0.04, 0.04, distance, 8);
+                const mat = new THREE.MeshStandardMaterial({ color: 0x38bdf8 });
+                const cylinder = new THREE.Mesh(cylGeo, mat);
+                cylinder.position.copy(posA).add(posB).multiplyScalar(0.5);
+                cylinder.position.x += dx;
+                cylinder.lookAt(posB);
+                cylinder.rotateX(Math.PI / 2);
+                this.scene.add(cylinder);
+                this.bondMeshes.push(cylinder);
+            });
+        } else {
+            const cylGeo = new THREE.CylinderGeometry(0.07, 0.07, distance, 8);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1 });
+            const cylinder = new THREE.Mesh(cylGeo, mat);
+            cylinder.position.copy(posA).add(posB).multiplyScalar(0.5);
+            cylinder.lookAt(posB);
+            cylinder.rotateX(Math.PI / 2);
+            this.scene.add(cylinder);
+            this.bondMeshes.push(cylinder);
+        }
     }
 
     setMode(mode) {
         this.mode = mode;
         this.loadMolecule(this.currentMoleculeKey);
+    }
+
+    toggleBondType() {
+        this.selectedBondType = this.selectedBondType === 'single' ? 'double' : 'single';
+        return this.selectedBondType;
     }
 
     initEvents() {
@@ -127,8 +152,9 @@ export class MoleculeViewer {
                 const atomId = clickedMesh.userData.id;
 
                 if (this.mode === 'viewer') {
+                    const atom = this.molData.atoms.find(a => a.id === atomId);
                     if (typeof window.onAtomSelected === 'function') {
-                        window.onAtomSelected(this.molData.atoms.find(a => a.id === atomId));
+                        window.onAtomSelected(atom);
                     }
                 } else if (this.mode === 'puzzle') {
                     this.handlePuzzleClick(atomId);
@@ -145,10 +171,9 @@ export class MoleculeViewer {
             this.highlightAtom(atomId, false);
             this.selectedAtom = null;
         } else {
-            // Conectar átomos
-            this.history.push([...this.userConnections]);
-            this.userConnections.push({ from: this.selectedAtom, to: atomId, type: 'single' });
-            this.createBondMesh(this.selectedAtom, atomId, 'single');
+            this.history.push(JSON.parse(JSON.stringify(this.userConnections)));
+            this.userConnections.push({ from: this.selectedAtom, to: atomId, type: this.selectedBondType });
+            this.createBondMesh(this.selectedAtom, atomId, this.selectedBondType);
             this.highlightAtom(this.selectedAtom, false);
             this.selectedAtom = null;
             
@@ -161,40 +186,61 @@ export class MoleculeViewer {
     highlightAtom(atomId, highlight) {
         const mesh = this.atomMeshes.find(m => m.userData.id === atomId);
         if (mesh) {
-            mesh.material.emissive.setHex(highlight ? 0x00ff00 : 0x000000);
+            mesh.material.emissive.setHex(highlight ? 0x22c55e : 0x000000);
         }
     }
 
     validatePuzzle() {
         const required = this.molData.connections;
+        
         if (this.userConnections.length < required.length) {
-            return { success: false, message: 'Faltan conexiones por realizar en la molécula.' };
+            return { success: false, message: `Te faltan enlaces. Has realizado ${this.userConnections.length} de ${required.length}.` };
         }
 
-        // Validación básica de enlaces correctos
-        for (let req of required) {
-            const exists = this.userConnections.some(uc => 
-                (uc.from === req.from && uc.to === req.to) || (uc.from === req.to && uc.to === req.from)
-            );
-            if (!exists) {
+        // Validación de Valencias
+        const valenceMap = {};
+        this.molData.atoms.forEach(a => valenceMap[a.id] = { max: a.valence, used: 0, element: a.element });
+
+        for (let uc of this.userConnections) {
+            const weight = uc.type === 'double' ? 2 : 1;
+            if (valenceMap[uc.from]) valenceMap[uc.from].used += weight;
+            if (valenceMap[uc.to]) valenceMap[uc.to].used += weight;
+        }
+
+        for (let id in valenceMap) {
+            const v = valenceMap[id];
+            if (v.used > v.max) {
                 return { 
                     success: false, 
-                    message: `Error de geometría o enlace: El átomo ${req.from} y el átomo ${req.to} requieren un enlace correcto según la valencia.` 
+                    message: `Exceso de valencia: El átomo de ${v.element} permite máximo ${v.max} enlace(s) y le asignaste ${v.used}.` 
                 };
             }
         }
 
-        return { success: true, message: '¡Excelente! Puzzle completado correctamente con la geometría y valencias adecuadas.' };
+        for (let req of required) {
+            const exists = this.userConnections.some(uc => 
+                ((uc.from === req.from && uc.to === req.to) || (uc.from === req.to && uc.to === req.from)) && uc.type === req.type
+            );
+            if (!exists) {
+                return { 
+                    success: false, 
+                    message: `Estructura incorrecta: Revisa las conexiones entre átomos y asegúrate de usar enlaces ${req.type === 'double' ? 'dobles' : 'simples'} según la geometría.` 
+                };
+            }
+        }
+
+        return { success: true, message: '¡Perfecto! Has construido la molécula con valencias y enlaces correctos.' };
     }
 
     undo() {
         if (this.history.length > 0) {
             this.userConnections = this.history.pop();
-            // Recargar escena para limpiar enlaces sobrantes
-            this.clearScene();
-            this.buildScene();
-            // Redibujar conexiones actuales
+            this.bondMeshes.forEach(m => this.scene.remove(m));
+            this.bondMeshes = [];
             this.userConnections.forEach(uc => this.createBondMesh(uc.from, uc.to, uc.type));
+            if (typeof window.onPuzzleProgress === 'function') {
+                window.onPuzzleProgress(this.userConnections.length, this.molData.connections.length);
+            }
         }
     }
 
@@ -207,14 +253,16 @@ export class MoleculeViewer {
             !this.userConnections.some(uc => (uc.from === rc.from && uc.to === rc.to) || (uc.from === rc.to && uc.to === rc.from))
         );
         if (missing) {
-            return `Pista: Intenta conectar el átomo con ID ${missing.from} con el átomo con ID ${missing.to}.`;
+            const a1 = this.molData.atoms.find(a => a.id === missing.from);
+            const a2 = this.molData.atoms.find(a => a.id === missing.to);
+            return `Pista: Une un átomo de ${a1.element} con uno de ${a2.element} mediante enlace ${missing.type === 'double' ? 'doble' : 'simple'}.`;
         }
-        return '¡Todas las conexiones principales están listas!';
+        return '¡Ya realizaste la cantidad de conexiones esperada! Presiona Validar.';
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
-        this.scene.rotation.y += 0.005;
+        this.scene.rotation.y += 0.003;
         this.renderer.render(this.scene, this.camera);
     }
 }

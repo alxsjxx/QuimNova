@@ -1,18 +1,14 @@
 {
   "name": "quimnova",
-  "version": "0.1.0",
-  "private": true,
-  "description": "QuimNova: visor educativo de moléculas 3D (HTML + Three.js + Capacitor)",
+  "version": "1.0.0",
+  "description": "Aplicación educativa de química con moléculas 3D y modo puzzle",
+  "main": "www/index.html",
   "scripts": {
-    "vendor": "node scripts/copy-vendor.mjs",
-    "sync": "npm run vendor && cap sync android"
+    "build": "node scripts/copy-vendor.mjs"
   },
   "dependencies": {
-    "@capacitor/android": "^7.0.0",
-    "@capacitor/core": "^7.0.0",
-    "three": "0.170.0"
-  },
-  "devDependencies": {
-    "@capacitor/cli": "^7.0.0"
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0"
   }
 }

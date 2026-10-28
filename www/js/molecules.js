@@ -4,15 +4,15 @@ export const moleculesData = {
         name: 'Agua',
         formula: 'H₂O',
         mass: '18.015 g/mol',
-        geometry: 'Angular (Bent)',
+        geometry: 'Angular',
         angles: '104.5°',
-        bonds: '2 enlaces covalentes simples O-H',
+        bonds: '2 enlaces simples O-H',
         properties: 'Líquido incoloro, inodoro e insípido. Disolvente universal.',
-        uses: 'Esencial para la vida, procesos biológicos e industriales.',
+        uses: 'Esencial para la vida y procesos biológicos.',
         atoms: [
-            { id: 0, element: 'O', x: 0, y: 0, z: 0, color: 0xff4d4d, radius: 0.5, valence: 2 },
-            { id: 1, element: 'H', x: 0.8, y: 0.6, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 2, element: 'H', x: -0.8, y: 0.6, z: 0, color: 0xffffff, radius: 0.3, valence: 1 }
+            { id: 0, element: 'O', x: 0, y: 0, z: 0, color: 0xef4444, radius: 0.5, valence: 2 },
+            { id: 1, element: 'H', x: 0.8, y: 0.6, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 2, element: 'H', x: -0.8, y: 0.6, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 }
         ],
         connections: [
             { from: 0, to: 1, type: 'single' },
@@ -26,13 +26,13 @@ export const moleculesData = {
         mass: '44.01 g/mol',
         geometry: 'Lineal',
         angles: '180°',
-        bonds: '2 enlaces covalentes dobles C=O',
+        bonds: '2 enlaces dobles C=O',
         properties: 'Gas incoloro, denso y no inflamable.',
         uses: 'Bebidas carbonatadas, extintores y fotosíntesis.',
         atoms: [
-            { id: 0, element: 'C', x: 0, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
-            { id: 1, element: 'O', x: 1.2, y: 0, z: 0, color: 0xff4d4d, radius: 0.5, valence: 2 },
-            { id: 2, element: 'O', x: -1.2, y: 0, z: 0, color: 0xff4d4d, radius: 0.5, valence: 2 }
+            { id: 0, element: 'C', x: 0, y: 0, z: 0, color: 0x475569, radius: 0.5, valence: 4 },
+            { id: 1, element: 'O', x: 1.2, y: 0, z: 0, color: 0xef4444, radius: 0.5, valence: 2 },
+            { id: 2, element: 'O', x: -1.2, y: 0, z: 0, color: 0xef4444, radius: 0.5, valence: 2 }
         ],
         connections: [
             { from: 0, to: 1, type: 'double' },
@@ -46,15 +46,15 @@ export const moleculesData = {
         mass: '16.04 g/mol',
         geometry: 'Tetraédrica',
         angles: '109.5°',
-        bonds: '4 enlaces covalentes simples C-H',
-        properties: 'Gas incoloro, altamente inflamable, el alcano más simple.',
-        uses: 'Combustible principal y síntesis de productos químicos.',
+        bonds: '4 enlaces simples C-H',
+        properties: 'Gas incoloro e inflamable, hidrocarburo más simple.',
+        uses: 'Combustible fósil principal y síntesis química.',
         atoms: [
-            { id: 0, element: 'C', x: 0, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
-            { id: 1, element: 'H', x: 0.8, y: 0.8, z: 0.8, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 2, element: 'H', x: -0.8, y: -0.8, z: 0.8, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 3, element: 'H', x: -0.8, y: 0.8, z: -0.8, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 4, element: 'H', x: 0.8, y: -0.8, z: -0.8, color: 0xffffff, radius: 0.3, valence: 1 }
+            { id: 0, element: 'C', x: 0, y: 0, z: 0, color: 0x475569, radius: 0.5, valence: 4 },
+            { id: 1, element: 'H', x: 0.8, y: 0.8, z: 0.8, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 2, element: 'H', x: -0.8, y: -0.8, z: 0.8, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 3, element: 'H', x: -0.8, y: 0.8, z: -0.8, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 4, element: 'H', x: 0.8, y: -0.8, z: -0.8, color: 0xf8fafc, radius: 0.3, valence: 1 }
         ],
         connections: [
             { from: 0, to: 1, type: 'single' },
@@ -70,14 +70,14 @@ export const moleculesData = {
         mass: '17.03 g/mol',
         geometry: 'Piramidal trigonal',
         angles: '107°',
-        bonds: '3 enlaces covalentes simples N-H',
-        properties: 'Gas incoloro con olor penetrante e irritante.',
-        uses: 'Producción de fertilizantes y productos de limpieza.',
+        bonds: '3 enlaces simples N-H',
+        properties: 'Gas incoloro con olor muy penetrante.',
+        uses: 'Fabricación de fertilizantes y productos de limpieza.',
         atoms: [
-            { id: 0, element: 'N', x: 0, y: 0, z: 0, color: 0x3333ff, radius: 0.5, valence: 3 },
-            { id: 1, element: 'H', x: 0.9, y: -0.5, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 2, element: 'H', x: -0.45, y: -0.5, z: 0.8, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 3, element: 'H', x: -0.45, y: -0.5, z: -0.8, color: 0xffffff, radius: 0.3, valence: 1 }
+            { id: 0, element: 'N', x: 0, y: 0, z: 0, color: 0x2563eb, radius: 0.5, valence: 3 },
+            { id: 1, element: 'H', x: 0.9, y: -0.5, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 2, element: 'H', x: -0.45, y: -0.5, z: 0.8, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 3, element: 'H', x: -0.45, y: -0.5, z: -0.8, color: 0xf8fafc, radius: 0.3, valence: 1 }
         ],
         connections: [
             { from: 0, to: 1, type: 'single' },
@@ -87,21 +87,21 @@ export const moleculesData = {
     },
     C2H4: {
         id: 'C2H4',
-        name: 'Etileno (Eteno)',
+        name: 'Etileno',
         formula: 'C₂H₄',
         mass: '28.05 g/mol',
         geometry: 'Plana trigonal',
         angles: '120°',
-        bonds: '1 enlace doble C=C y 4 enlaces simples C-H',
-        properties: 'Gas incoloro, hormona vegetal natural.',
-        uses: 'Fabricación de polietileno y maduración de frutos.',
+        bonds: '1 enlace doble C=C, 4 simples C-H',
+        properties: 'Gas incoloro con aroma dulce.',
+        uses: 'Producción de plásticos (polietileno) y maduración de frutas.',
         atoms: [
-            { id: 0, element: 'C', x: -0.6, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
-            { id: 1, element: 'C', x: 0.6, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
-            { id: 2, element: 'H', x: -1.2, y: 0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 3, element: 'H', x: -1.2, y: -0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 4, element: 'H', x: 1.2, y: 0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
-            { id: 5, element: 'H', x: 1.2, y: -0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 }
+            { id: 0, element: 'C', x: -0.6, y: 0, z: 0, color: 0x475569, radius: 0.5, valence: 4 },
+            { id: 1, element: 'C', x: 0.6, y: 0, z: 0, color: 0x475569, radius: 0.5, valence: 4 },
+            { id: 2, element: 'H', x: -1.2, y: 0.9, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 3, element: 'H', x: -1.2, y: -0.9, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 4, element: 'H', x: 1.2, y: 0.9, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 },
+            { id: 5, element: 'H', x: 1.2, y: -0.9, z: 0, color: 0xf8fafc, radius: 0.3, valence: 1 }
         ],
         connections: [
             { from: 0, to: 1, type: 'double' },
@@ -118,22 +118,22 @@ export const moleculesData = {
         mass: '78.11 g/mol',
         geometry: 'Hexagonal plana',
         angles: '120°',
-        bonds: 'Enlace aromático deslocalizado',
-        properties: 'Líquido incoloro, aromático y tóxico.',
-        uses: 'Precursor en síntesis orgánica, plásticos y gomas.',
+        bonds: 'Enlaces resonantes aromáticos',
+        properties: 'Líquido incoloro, inflamable y aromático.',
+        uses: 'Disolvente industrial y precursor de polímeros.',
         atoms: [
-            { id: 0, element: 'C', x: 1.0, y: 0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
-            { id: 1, element: 'C', x: 1.0, y: -0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
-            { id: 2, element: 'C', x: 0.0, y: -1.2, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
-            { id: 3, element: 'C', x: -1.0, y: -0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
-            { id: 4, element: 'C', x: -1.0, y: 0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
-            { id: 5, element: 'C', x: 0.0, y: 1.2, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
-            { id: 6, element: 'H', x: 1.9, y: 1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
-            { id: 7, element: 'H', x: 1.9, y: -1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
-            { id: 8, element: 'H', x: 0.0, y: -2.3, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
-            { id: 9, element: 'H', x: -1.9, y: -1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
-            { id: 10, element: 'H', x: -1.9, y: 1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
-            { id: 11, element: 'H', x: 0.0, y: 2.3, z: 0, color: 0xffffff, radius: 0.25, valence: 1 }
+            { id: 0, element: 'C', x: 1.0, y: 0.6, z: 0, color: 0x475569, radius: 0.45, valence: 4 },
+            { id: 1, element: 'C', x: 1.0, y: -0.6, z: 0, color: 0x475569, radius: 0.45, valence: 4 },
+            { id: 2, element: 'C', x: 0.0, y: -1.2, z: 0, color: 0x475569, radius: 0.45, valence: 4 },
+            { id: 3, element: 'C', x: -1.0, y: -0.6, z: 0, color: 0x475569, radius: 0.45, valence: 4 },
+            { id: 4, element: 'C', x: -1.0, y: 0.6, z: 0, color: 0x475569, radius: 0.45, valence: 4 },
+            { id: 5, element: 'C', x: 0.0, y: 1.2, z: 0, color: 0x475569, radius: 0.45, valence: 4 },
+            { id: 6, element: 'H', x: 1.9, y: 1.1, z: 0, color: 0xf8fafc, radius: 0.25, valence: 1 },
+            { id: 7, element: 'H', x: 1.9, y: -1.1, z: 0, color: 0xf8fafc, radius: 0.25, valence: 1 },
+            { id: 8, element: 'H', x: 0.0, y: -2.3, z: 0, color: 0xf8fafc, radius: 0.25, valence: 1 },
+            { id: 9, element: 'H', x: -1.9, y: -1.1, z: 0, color: 0xf8fafc, radius: 0.25, valence: 1 },
+            { id: 10, element: 'H', x: -1.9, y: 1.1, z: 0, color: 0xf8fafc, radius: 0.25, valence: 1 },
+            { id: 11, element: 'H', x: 0.0, y: 2.3, z: 0, color: 0xf8fafc, radius: 0.25, valence: 1 }
         ],
         connections: [
             { from: 0, to: 1, type: 'double' },

@@ -1,70 +1,153 @@
-// Datos de moléculas: átomos [elemento, x, y, z] en ångström; enlaces [i, j, orden].
-// Todo local: no hay descargas, así que funciona sin conexión.
-
-function benceno() {
-  const atomos = [];
-  const enlaces = [];
-  for (let i = 0; i < 6; i++) {
-    const a = (i * Math.PI) / 3;
-    atomos.push(['C', 1.397 * Math.cos(a), 1.397 * Math.sin(a), 0]);
-  }
-  for (let i = 0; i < 6; i++) {
-    const a = (i * Math.PI) / 3;
-    atomos.push(['H', 2.481 * Math.cos(a), 2.481 * Math.sin(a), 0]);
-  }
-  for (let i = 0; i < 6; i++) {
-    enlaces.push([i, (i + 1) % 6, i % 2 ? 1 : 2]); // estructura de Kekulé
-    enlaces.push([i, 6 + i, 1]);
-  }
-  return { atomos, enlaces };
-}
-
-const t = 0.6276; // 1,087 Å / √3
-
-export const MOLECULAS = [
-  {
-    id: 'agua', nombre: 'Agua', formula: 'H₂O',
-    geometria: 'Angular · H–O–H ≈ 104,5°',
-    descripcion: 'Molécula polar. Los dos pares libres del oxígeno cierran el ángulo respecto al tetraédrico (109,5°).',
-    atomos: [['O', 0, 0, 0], ['H', 0.757, 0.586, 0], ['H', -0.757, 0.586, 0]],
-    enlaces: [[0, 1, 1], [0, 2, 1]],
-  },
-  {
-    id: 'co2', nombre: 'Dióxido de carbono', formula: 'CO₂',
-    geometria: 'Lineal · O=C=O = 180°',
-    descripcion: 'Aunque cada enlace C=O es polar, los dos dipolos se cancelan y la molécula es apolar.',
-    atomos: [['C', 0, 0, 0], ['O', 1.16, 0, 0], ['O', -1.16, 0, 0]],
-    enlaces: [[0, 1, 2], [0, 2, 2]],
-  },
-  {
-    id: 'metano', nombre: 'Metano', formula: 'CH₄',
-    geometria: 'Tetraédrica · H–C–H = 109,5°',
-    descripcion: 'El hidrocarburo más simple. Cuatro enlaces C–H idénticos orientados a los vértices de un tetraedro.',
-    atomos: [['C', 0, 0, 0], ['H', t, t, t], ['H', t, -t, -t], ['H', -t, t, -t], ['H', -t, -t, t]],
-    enlaces: [[0, 1, 1], [0, 2, 1], [0, 3, 1], [0, 4, 1]],
-  },
-  {
-    id: 'amoniaco', nombre: 'Amoníaco', formula: 'NH₃',
-    geometria: 'Piramidal trigonal · H–N–H ≈ 107°',
-    descripcion: 'El nitrógeno tiene un par libre que empuja los tres hidrógenos hacia abajo, formando una pirámide.',
-    atomos: [['N', 0, 0, 0.38], ['H', 0.938, 0, 0], ['H', -0.469, 0.812, 0], ['H', -0.469, -0.812, 0]],
-    enlaces: [[0, 1, 1], [0, 2, 1], [0, 3, 1]],
-  },
-  {
-    id: 'etileno', nombre: 'Etileno', formula: 'C₂H₄',
-    geometria: 'Plana · H–C–C ≈ 121°',
-    descripcion: 'Doble enlace C=C (≈1,34 Å), más corto que el simple del etano. Los seis átomos están en un mismo plano.',
-    atomos: [
-      ['C', -0.6695, 0, 0], ['C', 0.6695, 0, 0],
-      ['H', -1.2342, 0.9288, 0], ['H', -1.2342, -0.9288, 0],
-      ['H', 1.2342, 0.9288, 0], ['H', 1.2342, -0.9288, 0],
-    ],
-    enlaces: [[0, 1, 2], [0, 2, 1], [0, 3, 1], [1, 4, 1], [1, 5, 1]],
-  },
-  {
-    id: 'benceno', nombre: 'Benceno', formula: 'C₆H₆',
-    geometria: 'Anillo plano hexagonal · 120°',
-    descripcion: 'Los electrones π están deslocalizados: los seis enlaces C–C miden ≈1,40 Å. Aquí se dibuja una estructura de Kekulé.',
-    ...benceno(),
-  },
-];
+export const moleculesData = {
+    H2O: {
+        id: 'H2O',
+        name: 'Agua',
+        formula: 'H₂O',
+        mass: '18.015 g/mol',
+        geometry: 'Angular (Bent)',
+        angles: '104.5°',
+        bonds: '2 enlaces covalentes simples O-H',
+        properties: 'Líquido incoloro, inodoro e insípido. Disolvente universal.',
+        uses: 'Esencial para la vida, procesos biológicos e industriales.',
+        atoms: [
+            { id: 0, element: 'O', x: 0, y: 0, z: 0, color: 0xff4d4d, radius: 0.5, valence: 2 },
+            { id: 1, element: 'H', x: 0.8, y: 0.6, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 2, element: 'H', x: -0.8, y: 0.6, z: 0, color: 0xffffff, radius: 0.3, valence: 1 }
+        ],
+        connections: [
+            { from: 0, to: 1, type: 'single' },
+            { from: 0, to: 2, type: 'single' }
+        ]
+    },
+    CO2: {
+        id: 'CO2',
+        name: 'Dióxido de Carbono',
+        formula: 'CO₂',
+        mass: '44.01 g/mol',
+        geometry: 'Lineal',
+        angles: '180°',
+        bonds: '2 enlaces covalentes dobles C=O',
+        properties: 'Gas incoloro, denso y no inflamable.',
+        uses: 'Bebidas carbonatadas, extintores y fotosíntesis.',
+        atoms: [
+            { id: 0, element: 'C', x: 0, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
+            { id: 1, element: 'O', x: 1.2, y: 0, z: 0, color: 0xff4d4d, radius: 0.5, valence: 2 },
+            { id: 2, element: 'O', x: -1.2, y: 0, z: 0, color: 0xff4d4d, radius: 0.5, valence: 2 }
+        ],
+        connections: [
+            { from: 0, to: 1, type: 'double' },
+            { from: 0, to: 2, type: 'double' }
+        ]
+    },
+    CH4: {
+        id: 'CH4',
+        name: 'Metano',
+        formula: 'CH₄',
+        mass: '16.04 g/mol',
+        geometry: 'Tetraédrica',
+        angles: '109.5°',
+        bonds: '4 enlaces covalentes simples C-H',
+        properties: 'Gas incoloro, altamente inflamable, el alcano más simple.',
+        uses: 'Combustible principal y síntesis de productos químicos.',
+        atoms: [
+            { id: 0, element: 'C', x: 0, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
+            { id: 1, element: 'H', x: 0.8, y: 0.8, z: 0.8, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 2, element: 'H', x: -0.8, y: -0.8, z: 0.8, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 3, element: 'H', x: -0.8, y: 0.8, z: -0.8, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 4, element: 'H', x: 0.8, y: -0.8, z: -0.8, color: 0xffffff, radius: 0.3, valence: 1 }
+        ],
+        connections: [
+            { from: 0, to: 1, type: 'single' },
+            { from: 0, to: 2, type: 'single' },
+            { from: 0, to: 3, type: 'single' },
+            { from: 0, to: 4, type: 'single' }
+        ]
+    },
+    NH3: {
+        id: 'NH3',
+        name: 'Amoníaco',
+        formula: 'NH₃',
+        mass: '17.03 g/mol',
+        geometry: 'Piramidal trigonal',
+        angles: '107°',
+        bonds: '3 enlaces covalentes simples N-H',
+        properties: 'Gas incoloro con olor penetrante e irritante.',
+        uses: 'Producción de fertilizantes y productos de limpieza.',
+        atoms: [
+            { id: 0, element: 'N', x: 0, y: 0, z: 0, color: 0x3333ff, radius: 0.5, valence: 3 },
+            { id: 1, element: 'H', x: 0.9, y: -0.5, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 2, element: 'H', x: -0.45, y: -0.5, z: 0.8, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 3, element: 'H', x: -0.45, y: -0.5, z: -0.8, color: 0xffffff, radius: 0.3, valence: 1 }
+        ],
+        connections: [
+            { from: 0, to: 1, type: 'single' },
+            { from: 0, to: 2, type: 'single' },
+            { from: 0, to: 3, type: 'single' }
+        ]
+    },
+    C2H4: {
+        id: 'C2H4',
+        name: 'Etileno (Eteno)',
+        formula: 'C₂H₄',
+        mass: '28.05 g/mol',
+        geometry: 'Plana trigonal',
+        angles: '120°',
+        bonds: '1 enlace doble C=C y 4 enlaces simples C-H',
+        properties: 'Gas incoloro, hormona vegetal natural.',
+        uses: 'Fabricación de polietileno y maduración de frutos.',
+        atoms: [
+            { id: 0, element: 'C', x: -0.6, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
+            { id: 1, element: 'C', x: 0.6, y: 0, z: 0, color: 0x4d4d4d, radius: 0.5, valence: 4 },
+            { id: 2, element: 'H', x: -1.2, y: 0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 3, element: 'H', x: -1.2, y: -0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 4, element: 'H', x: 1.2, y: 0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 },
+            { id: 5, element: 'H', x: 1.2, y: -0.9, z: 0, color: 0xffffff, radius: 0.3, valence: 1 }
+        ],
+        connections: [
+            { from: 0, to: 1, type: 'double' },
+            { from: 0, to: 2, type: 'single' },
+            { from: 0, to: 3, type: 'single' },
+            { from: 1, to: 4, type: 'single' },
+            { from: 1, to: 5, type: 'single' }
+        ]
+    },
+    C6H6: {
+        id: 'C6H6',
+        name: 'Benceno',
+        formula: 'C₆H₆',
+        mass: '78.11 g/mol',
+        geometry: 'Hexagonal plana',
+        angles: '120°',
+        bonds: 'Enlace aromático deslocalizado',
+        properties: 'Líquido incoloro, aromático y tóxico.',
+        uses: 'Precursor en síntesis orgánica, plásticos y gomas.',
+        atoms: [
+            { id: 0, element: 'C', x: 1.0, y: 0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
+            { id: 1, element: 'C', x: 1.0, y: -0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
+            { id: 2, element: 'C', x: 0.0, y: -1.2, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
+            { id: 3, element: 'C', x: -1.0, y: -0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
+            { id: 4, element: 'C', x: -1.0, y: 0.6, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
+            { id: 5, element: 'C', x: 0.0, y: 1.2, z: 0, color: 0x4d4d4d, radius: 0.45, valence: 4 },
+            { id: 6, element: 'H', x: 1.9, y: 1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
+            { id: 7, element: 'H', x: 1.9, y: -1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
+            { id: 8, element: 'H', x: 0.0, y: -2.3, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
+            { id: 9, element: 'H', x: -1.9, y: -1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
+            { id: 10, element: 'H', x: -1.9, y: 1.1, z: 0, color: 0xffffff, radius: 0.25, valence: 1 },
+            { id: 11, element: 'H', x: 0.0, y: 2.3, z: 0, color: 0xffffff, radius: 0.25, valence: 1 }
+        ],
+        connections: [
+            { from: 0, to: 1, type: 'double' },
+            { from: 1, to: 2, type: 'single' },
+            { from: 2, to: 3, type: 'double' },
+            { from: 3, to: 4, type: 'single' },
+            { from: 4, to: 5, type: 'double' },
+            { from: 5, to: 0, type: 'single' },
+            { from: 0, to: 6, type: 'single' },
+            { from: 1, to: 7, type: 'single' },
+            { from: 2, to: 8, type: 'single' },
+            { from: 3, to: 9, type: 'single' },
+            { from: 4, to: 10, type: 'single' },
+            { from: 5, to: 11, type: 'single' }
+        ]
+    }
+};

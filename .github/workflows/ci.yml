@@ -95,6 +95,8 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0 cmdline-tools;latest'
       - run: npm install --no-audit --no-fund
       - run: node scripts/copy-vendor.mjs
       - run: npx cap add android
@@ -119,4 +121,3 @@ jobs:
           gh release create "apk-${{ github.run_number }}" QuimNova.apk \
             --title "QuimNova APK #${{ github.run_number }}" \
             --notes "APK de depuración. Instálala permitiendo 'instalar apps desconocidas' para tu navegador."
-            
